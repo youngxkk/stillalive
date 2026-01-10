@@ -34,7 +34,7 @@ struct ContentView: View {
                                 .font(.system(size: 14 * scale, weight: .black, design: .rounded))
                                 .textCase(.uppercase)
                                 .tracking(4)
-                                .foregroundColor(.white.opacity(0.5))
+                                .foregroundColor(.primary.opacity(0.5))
                             
                             Text(timeString(from: manager.timeRemaining))
                                 .font(.system(size: 84 * scale, weight: .black, design: .rounded))
@@ -42,31 +42,47 @@ struct ContentView: View {
                                 .minimumScaleFactor(0.4)
                                 .contentTransition(.numericText())
                                 .animation(.spring(response: 0.4, dampingFraction: 0.7), value: manager.timeRemaining)
-                                .foregroundColor(.white)
-                                .shadow(color: .black.opacity(0.2), radius: 15, x: 0, y: 15)
+                                .foregroundColor(.primary)
+                                .shadow(color: Color.primary.opacity(0.2), radius: 15, x: 0, y: 15)
                         }
                         .padding(.vertical, 50 * scale)
                         .padding(.horizontal, 20 * scale)
                         .frame(maxWidth: .infinity)
                         .background {
                             ZStack {
+                                // Background Glow
+                                RoundedRectangle(cornerRadius: 48 * scale, style: .continuous)
+                                    .fill(statusColor.opacity(0.12))
+                                    .blur(radius: pulse ? 40 : 20)
+                                    .scaleEffect(pulse ? 1.02 : 0.98)
+                                
                                 // Main Frosted Glass
                                 RoundedRectangle(cornerRadius: 48 * scale, style: .continuous)
                                     .fill(.ultraThinMaterial)
+                                
+                                // Color Vibrancy Tint
+                                RoundedRectangle(cornerRadius: 48 * scale, style: .continuous)
+                                    .fill(statusColor.opacity(0.08))
                                 
                                 // Edge Highlight
                                 RoundedRectangle(cornerRadius: 48 * scale, style: .continuous)
                                     .stroke(
                                         LinearGradient(
-                                            colors: [.white.opacity(0.6), .white.opacity(0.1), .clear, .white.opacity(0.1), .white.opacity(0.3)],
+                                            colors: [
+                                                .white.opacity(0.6),
+                                                .white.opacity(0.1),
+                                                .clear,
+                                                .white.opacity(0.1),
+                                                .white.opacity(0.4)
+                                            ],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
                                         ),
-                                        lineWidth: 1.5
+                                        lineWidth: 2
                                     )
                             }
                         }
-                        .shadow(color: .black.opacity(0.15), radius: 40, x: 0, y: 30)
+                        .shadow(color: Color.primary.opacity(0.1), radius: 40, x: 0, y: 30)
                         .padding(.horizontal, 25)
                         .scaleEffect(appear ? 1 : 0.9)
                         .offset(y: appear ? 0 : 40)
@@ -119,7 +135,7 @@ struct ContentView: View {
                                         .foregroundColor(.white)
                                         .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 5)
                                     
-                                    Text("CHECK IN")
+                                    Text("I'M OK")
                                         .font(.system(size: 14 * scale, weight: .black, design: .rounded))
                                         .tracking(2)
                                         .foregroundColor(.white)
@@ -137,13 +153,13 @@ struct ContentView: View {
                             Text("LAST VERIFICATION")
                                 .font(.system(size: 11 * scale, weight: .black, design: .rounded))
                                 .tracking(2)
-                                .foregroundColor(.white.opacity(0.4))
+                                .foregroundColor(.primary.opacity(0.4))
                             
                             Text(manager.lastCheckInDate.formatted(date: .abbreviated, time: .shortened))
                                 .font(.system(size: 16 * scale, weight: .bold, design: .rounded))
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(.primary.opacity(0.8))
                         }
-                        .padding(.bottom, 30)
+                        .padding(.bottom, 15)
                         .offset(y: appear ? 0 : 30)
                         .opacity(appear ? 1 : 0)
                     }
@@ -158,12 +174,13 @@ struct ContentView: View {
                     }
                 }
             }
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("App_Title")
                         .font(.system(size: 20, weight: .black, design: .rounded))
                         .tracking(3)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .opacity(0.9)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -180,11 +197,9 @@ struct ContentView: View {
                                 .fontWeight(.bold)
                         }
                     }
-                    .foregroundColor(.white.opacity(0.8))
                 }
             }
             .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .sheet(isPresented: $showSettings) {
                 SettingsView(manager: manager)
             }
@@ -270,6 +285,7 @@ struct ContentView: View {
 
 struct LiquidBackground: View {
     let status: AliveManager.AliveStatus
+    @Environment(\.colorScheme) var colorScheme
     @State private var animate = false
     
     var body: some View {
@@ -290,6 +306,7 @@ struct LiquidBackground: View {
                 }
             }
         }
+        .animation(.spring(), value: status)
         .onAppear {
             withAnimation(.easeInOut(duration: 12).repeatForever(autoreverses: true)) {
                 animate.toggle()
@@ -322,21 +339,40 @@ struct LiquidBackground: View {
     }
     
     var bgColor: Color {
-        switch status {
-        case .safe: return Color(hex: "0F2027") // Deep Night Blue
-        case .warning: return Color(hex: "1F1405") // Deep Amber Black
-        case .danger: return Color(hex: "1A0505") // Deep Crimson Black
+        if colorScheme == .dark {
+            switch status {
+            case .safe: return Color(hex: "0F2027") // Deep Night Blue
+            case .warning: return Color(hex: "1F1405") // Deep Amber Black
+            case .danger: return Color(hex: "1A0505") // Deep Crimson Black
+            }
+        } else {
+            switch status {
+            case .safe: return Color(hex: "F0F9FF") // Very Light Blue
+            case .warning: return Color(hex: "FFF7ED") // Very Light Amber
+            case .danger: return Color(hex: "FEF2F2") // Very Light Red
+            }
         }
     }
     
     func blobColor(for index: Int) -> Color {
-        switch status {
-        case .safe:
-            return index == 0 ? Color(hex: "2193b0") : (index == 1 ? Color(hex: "6dd5ed") : Color(hex: "00F260"))
-        case .warning:
-            return index == 0 ? Color(hex: "FFB347") : (index == 1 ? Color(hex: "F2994A") : Color(hex: "EB5757"))
-        case .danger:
-            return index == 0 ? Color(hex: "FF4B2B") : (index == 1 ? Color(hex: "8E0E00") : Color(hex: "4b1212"))
+        if colorScheme == .dark {
+            switch status {
+            case .safe:
+                return index == 0 ? Color(hex: "2193b0") : (index == 1 ? Color(hex: "6dd5ed") : Color(hex: "00F260"))
+            case .warning:
+                return index == 0 ? Color(hex: "FFB347") : (index == 1 ? Color(hex: "F2994A") : Color(hex: "EB5757"))
+            case .danger:
+                return index == 0 ? Color(hex: "FF4B2B") : (index == 1 ? Color(hex: "8E0E00") : Color(hex: "4b1212"))
+            }
+        } else {
+            switch status {
+            case .safe:
+                return index == 0 ? Color(hex: "BAE6FD") : (index == 1 ? Color(hex: "7DD3FC") : Color(hex: "86EFAC"))
+            case .warning:
+                return index == 0 ? Color(hex: "FED7AA") : (index == 1 ? Color(hex: "FDBA74") : Color(hex: "FCA5A5"))
+            case .danger:
+                return index == 0 ? Color(hex: "FECACA") : (index == 1 ? Color(hex: "EF4444") : Color(hex: "F87171"))
+            }
         }
     }
 }
@@ -372,7 +408,7 @@ struct ToastView: View {
                 
                 Text("Verification Successful")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 24)
@@ -381,11 +417,11 @@ struct ToastView: View {
                     .fill(.ultraThinMaterial)
                     .overlay {
                         Capsule()
-                            .stroke(.white.opacity(0.3), lineWidth: 0.5)
+                            .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
                     }
             }
-            .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
-            .padding(.top, 10)
+            .shadow(color: Color.primary.opacity(0.1), radius: 20, x: 0, y: 10)
+            .padding(.top, 2)
             
             Spacer()
         }
