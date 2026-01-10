@@ -9,45 +9,57 @@ struct ContactView: View {
     @State private var showErrorAlert = false
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     
+    var isEmailValid: Bool {
+        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+        return emailPred.evaluate(with: manager.contactEmail)
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
                 Section(header: Text("Emergency Contact"), footer: Text("This email will be used when the timer expires.")) {
-                    TextField("Recipient Email", text: $manager.contactEmail)
-                        .keyboardType(.emailAddress)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
+                    VStack(alignment: .leading) {
+                        TextField("Recipient Email", text: $manager.contactEmail)
+                            .keyboardType(.emailAddress)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                        
+                        if !manager.contactEmail.isEmpty && !isEmailValid {
+                            Text("Invalid_Email")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                    }
                 }
                 
-                Section(header: Text("Message Content")) {
+                Section(header: Text("Message Content"), footer: Text("Email_Body_Hint")) {
                     TextField("Subject", text: $manager.emailSubject)
                     
                     ZStack(alignment: .topLeading) {
                         if manager.emailBody.isEmpty {
-                            Text("Enter message body...")
-                                .foregroundColor(Color.gray.opacity(0.5))
+                            Text(NSLocalizedString("Default_Email_Body", comment: ""))
+                                .foregroundColor(Color.primary.opacity(0.3))
                                 .padding(.top, 8)
+                                .padding(.leading, 5)
                         }
                         TextEditor(text: $manager.emailBody)
-                            .frame(minHeight: 100)
+                            .frame(minHeight: 180)
                     }
                 }
                 
-                Section {
+                Section(footer: Text("Test_Limit_Description")) {
                      Button(action: {
-                         if MFMailComposeViewController.canSendMail() {
-                             showMailView = true
-                         } else {
-                             showErrorAlert = true
-                             print("Can't send mail")
+                         Task {
+                             await manager.sendTestEmailToServer()
                          }
                      }) {
                          HStack {
-                             Image(systemName: "envelope.fill")
-                             Text("Send Test Email")
+                             Image(systemName: "server.rack")
+                             Text("Test_Via_Server")
                          }
                      }
-                     .disabled(manager.contactEmail.isEmpty)
+                     .disabled(manager.contactEmail.isEmpty || !isEmailValid || !manager.canSendTestEmail() || manager.syncStatus == .syncing)
                  }
             }
             .navigationTitle("Emergency Contact")

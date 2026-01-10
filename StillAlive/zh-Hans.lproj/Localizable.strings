@@ -8,15 +8,25 @@
 
 /* App Strings */
 "App_Title" = "Are You OK";
-"App_Subtitle" = "I'm OK";
+"App_Subtitle" = "Are You OK";
+
+"Status_Active" = "监测中";
+"Status_Required" = "等待验证";
+"Status_Alert" = "警报已触发";
 
 "Time Remaining" = "倒计时";
 "Check-in Required" = "请尽快打卡";
 "Emergency Alert" = "紧急警报";
 
+"Last_Verification" = "上次验证时间";
 "Last check-in" = "上次打卡";
-"I'M ALIVE" = "我还活着";
-"Check-in Confirmed" = "已打卡";
+"I'M OK" = "I'M OK";
+"Verification_Success" = "验证成功";
+
+/* Sync Status */
+"Sync_Status_Syncing" = "正在同步服务器...";
+"Sync_Status_Failed" = "服务器同步失败";
+"Sync_Status_NoEmail" = "请先设置紧急联系人邮箱";
 
 /* Settings */
 "Settings" = "设置";
@@ -26,6 +36,9 @@
 "Check-In Configuration" = "打卡设置";
 "Timeout Duration" = "超时时间";
 "Hours" = "小时";
+"Test_10s" = "10 秒 (测试)";
+"Test_1h" = "1 小时 (测试)";
+"X_Hours" = "%d 小时";
 
 "Language" = "语言";
 "System Default" = "系统默认";
@@ -45,12 +58,22 @@
 "Subject" = "邮件主题";
 "Enter message body..." = "输入邮件内容...";
 "Send Test Email" = "发送测试邮件";
+"Test_Via_Server" = "发送邮件测试 (通过后台服务器)";
+"Test_Limit_Description" = "为防止滥用，每 24 小时仅限发送一次测试邮件。";
+"Test_Email_Sent_Success" = "测试邮件请求已发送";
+"Test_Email_Sent_Failed" = "测试邮件发送请求失败";
+"Invalid_Email" = "邮箱格式错误";
 "Mail_Config_Error_Title" = "未设置邮箱账户";
 "Mail_Config_Error_Message" = "请在系统“设置 -> 邮件”中配置好您的邮箱账户后再试。";
 "Can't send mail" = "无法发送邮件";
 
-/* Notifications - Keys used in code */
+/* Notifications */
 "Notification_Title_Warning" = "你还好吗？";
 "Notification_Body_Warning" = "你还没打卡，距离警报只剩1小时。";
 "Notification_Title_Expired" = "紧急警报待发送";
 "Notification_Body_Expired" = "时间已到！请立即打卡。";
+
+/* Default Email Content */
+"Default_Email_Subject" = "紧急警报：我还没报平安 / Emergency Alert: I haven't checked in";
+"Default_Email_Body" = "我没能在 Are You OK App 上按时打卡。这代表我可能遇到了突发状况，请立即尝试通过电话等方式联系我，确认我的安全。\n---\nI have failed to check in on my 'Are You OK' app on time. Please contact me immediately to ensure I am safe.";
+"Email_Body_Hint" = "请务必在内容中告知朋友你的名字、电话、居住地址、密码锁代码等关键信息，方便朋友过来安全地帮助你。";

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var manager: AliveManager
+    @Environment(\.colorScheme) var colorScheme
     @State private var showSettings = false
     @State private var showContact = false
     @AppStorage("appAppearance") var appAppearance: Int = 0
@@ -17,12 +18,12 @@ struct ContentView: View {
                 
                 ZStack {
                     // MARK: - Liquid Background
-                    LiquidBackground(status: visualStatus)
+                    LiquidBackground(status: manager.status)
                         .ignoresSafeArea()
                     
                     // MARK: - Noise Texture Overlay
                     NoiseTexture()
-                        .opacity(0.12)
+                        .opacity(colorScheme == .dark ? 0.12 : 0.05)
                         .ignoresSafeArea()
                     
                     VStack(spacing: 30 * scale) {
@@ -30,18 +31,20 @@ struct ContentView: View {
                         
                         // MARK: - Main Glass Card
                         VStack(spacing: 20 * scale) {
-                            Text(statusTitle)
-                                .font(.system(size: 14 * scale, weight: .black, design: .rounded))
-                                .textCase(.uppercase)
-                                .tracking(4)
-                                .foregroundColor(.primary.opacity(0.5))
+                            HStack {
+                                Spacer()
+                                Text(statusTitle)
+                                    .font(.system(size: 14 * scale, weight: .black, design: .rounded))
+                                    .foregroundColor(statusColor.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity)
                             
                             Text(timeString(from: manager.timeRemaining))
                                 .font(.system(size: 84 * scale, weight: .black, design: .rounded))
                                 .monospacedDigit()
                                 .minimumScaleFactor(0.4)
-                                .contentTransition(.numericText())
-                                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: manager.timeRemaining)
                                 .foregroundColor(.primary)
                                 .shadow(color: Color.primary.opacity(0.2), radius: 15, x: 0, y: 15)
                         }
@@ -84,9 +87,7 @@ struct ContentView: View {
                         }
                         .shadow(color: Color.primary.opacity(0.1), radius: 40, x: 0, y: 30)
                         .padding(.horizontal, 25)
-                        .scaleEffect(appear ? 1 : 0.9)
-                        .offset(y: appear ? 0 : 40)
-                        .opacity(appear ? 1 : 0)
+                        .opacity(appear ? 1 : 0) // Keep fade-in only, no motion
                         
                         Spacer()
                         
@@ -97,10 +98,10 @@ struct ContentView: View {
                             ZStack {
                                 // Breath/Pulse effect
                                 Circle()
-                                    .fill(statusColor.opacity(0.3))
-                                    .frame(width: 280 * scale, height: 280 * scale)
-                                    .scaleEffect(pulse ? 1.2 : 1.0)
-                                    .blur(radius: pulse ? 25 : 15)
+                                    .fill(statusColor.opacity(0.25))
+                                    .frame(width: 320 * scale, height: 320 * scale) // Increased spread size
+                                    .scaleEffect(pulse ? 1.15 : 1.0)
+                                    .blur(radius: pulse ? 45 : 30) // Significantly increased blur for "Mist" effect
                                 
                                 // Outer Glass Ring
                                 Circle()
@@ -121,7 +122,7 @@ struct ContentView: View {
                                         )
                                     )
                                     .frame(width: 170 * scale, height: 170 * scale)
-                                    .shadow(color: statusColor.opacity(0.5), radius: 25, x: 0, y: 20)
+                                    .shadow(color: statusColor.opacity(0.4), radius: 45, x: 0, y: 20) // Increased shadow radius for larger diffusion
                                     .overlay {
                                         // Highlight on the core
                                         Circle()
@@ -135,7 +136,7 @@ struct ContentView: View {
                                         .foregroundColor(.white)
                                         .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 5)
                                     
-                                    Text("I'M OK")
+                                    Text("I'm OK")
                                         .font(.system(size: 14 * scale, weight: .black, design: .rounded))
                                         .tracking(2)
                                         .foregroundColor(.white)
@@ -143,14 +144,13 @@ struct ContentView: View {
                             }
                         }
                         .buttonStyle(ScaleButtonStyle())
-                        .offset(y: appear ? 0 : 80)
                         .opacity(appear ? 1 : 0)
                         
                         Spacer()
                         
                         // MARK: - Bottom Info
                         VStack(spacing: 8 * scale) {
-                            Text("LAST VERIFICATION")
+                            Text("Last_Verification")
                                 .font(.system(size: 11 * scale, weight: .black, design: .rounded))
                                 .tracking(2)
                                 .foregroundColor(.primary.opacity(0.4))
@@ -160,15 +160,13 @@ struct ContentView: View {
                                 .foregroundColor(.primary.opacity(0.8))
                         }
                         .padding(.bottom, 15)
-                        .offset(y: appear ? 0 : 30)
                         .opacity(appear ? 1 : 0)
                     }
-                    .frame(maxWidth: 600)
-                    .padding()
+                    .frame(width: geo.size.width, height: geo.size.height) // Lock content to exact center of screen
                     
                     // MARK: - Toast Overlay
-                    if showToast {
-                        ToastView()
+                    if showToast || manager.syncStatus != .idle {
+                        ToastView(syncStatus: manager.syncStatus)
                             .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity), removal: .opacity))
                             .zIndex(2)
                     }
@@ -183,19 +181,20 @@ struct ContentView: View {
                         .foregroundColor(.primary)
                         .opacity(0.9)
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: { showContact = true }) {
+                        Image(systemName: "person.crop.circle")
+                            .font(.title3)
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundColor(.primary)
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 20) {
-                        Button(action: { showContact = true }) {
-                            Image(systemName: "person.crop.circle")
-                                .font(.title3)
-                                .symbolRenderingMode(.hierarchical)
-                        }
-                        
-                        Button(action: { showSettings = true }) {
-                            Image(systemName: "gear")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                        }
+                    Button(action: { showSettings = true }) {
+                        Image(systemName: "gear")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
                     }
                 }
             }
@@ -239,16 +238,6 @@ struct ContentView: View {
     
     // MARK: - Helpers
     
-    private var visualStatus: AliveManager.AliveStatus {
-        if manager.timeRemaining <= 600 { // 10 minutes
-            return .danger
-        } else if manager.timeRemaining <= 3600 { // 1 hour
-            return .warning
-        } else {
-            return .safe
-        }
-    }
-    
     func calculateScale(size: CGSize) -> CGFloat {
         if UIDevice.current.userInterfaceIdiom == .pad {
             return min(size.width, size.height) / 480.0
@@ -257,18 +246,26 @@ struct ContentView: View {
     }
     
     var statusTitle: LocalizedStringKey {
-        switch visualStatus {
-        case .safe: return "Protocol: Active"
-        case .warning: return "Action Required"
-        case .danger: return "Alert Triggered"
+        switch manager.status {
+        case .safe: return "Status_Active"
+        case .warning: return "Status_Required"
+        case .danger: return "Status_Alert"
         }
     }
     
     var statusColor: Color {
-        switch visualStatus {
-        case .safe: return Color(hex: "00F260")
-        case .warning: return Color(hex: "FFB347")
-        case .danger: return Color(hex: "FF4B2B")
+        if colorScheme == .dark {
+            switch manager.status {
+            case .safe: return Color(hex: "00F260")
+            case .warning: return Color(hex: "FFB347")
+            case .danger: return Color(hex: "FF4B2B")
+            }
+        } else {
+            switch manager.status {
+            case .safe: return Color(hex: "1D976C") // Deep Emerald for readability
+            case .warning: return Color(hex: "E67E22") // Sophisticated Orange
+            case .danger: return Color(hex: "C0392B") // Rich Red
+            }
         }
     }
     
@@ -367,11 +364,11 @@ struct LiquidBackground: View {
         } else {
             switch status {
             case .safe:
-                return index == 0 ? Color(hex: "BAE6FD") : (index == 1 ? Color(hex: "7DD3FC") : Color(hex: "86EFAC"))
+                return index == 0 ? Color(hex: "D1FAE5") : (index == 1 ? Color(hex: "A7F3D0") : Color(hex: "6EE7B7"))
             case .warning:
-                return index == 0 ? Color(hex: "FED7AA") : (index == 1 ? Color(hex: "FDBA74") : Color(hex: "FCA5A5"))
+                return index == 0 ? Color(hex: "FFEDD5") : (index == 1 ? Color(hex: "FED7AA") : Color(hex: "FDBA74"))
             case .danger:
-                return index == 0 ? Color(hex: "FECACA") : (index == 1 ? Color(hex: "EF4444") : Color(hex: "F87171"))
+                return index == 0 ? Color(hex: "FEE2E2") : (index == 1 ? Color(hex: "FECACA") : Color(hex: "FCA5A5"))
             }
         }
     }
@@ -379,34 +376,49 @@ struct LiquidBackground: View {
 
 struct NoiseTexture: View {
     var body: some View {
-        GeometryReader { geo in
-            Canvas { context, size in
-                for x in stride(from: 0, to: size.width, by: 4) {
-                    for y in stride(from: 0, to: size.height, by: 4) {
-                        let opacity = Double.random(in: 0...1)
+        // Optimized noise using a tiled pattern to reduce Canvas calculation load
+        Rectangle()
+            .fill(.ultraThinMaterial)
+            .overlay {
+                Canvas { context, size in
+                    // Draw a sparse noise pattern that is static
+                    // Using a seed for stability if needed, but here we just draw once
+                    for _ in 0..<Int(size.width * size.height / 30) {
+                        let x = Double.random(in: 0...size.width)
+                        let y = Double.random(in: 0...size.height)
+                        let opacity = Double.random(in: 0.1...0.3)
                         context.opacity = opacity
-                        context.fill(Path(CGRect(x: x, y: y, width: 2, height: 2)), with: .color(.white))
+                        context.fill(Path(CGRect(x: x, y: y, width: 1.5, height: 1.5)), with: .color(.white))
                     }
                 }
             }
-        }
+            .drawingGroup() // Flattens the view into a single offscreen buffer
     }
 }
 
 struct ToastView: View {
+    let syncStatus: AliveManager.SyncStatus
+    
     var body: some View {
         VStack {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(.green)
+                        .fill(iconColor)
                         .frame(width: 24, height: 24)
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .black))
-                        .foregroundColor(.white)
+                    
+                    if syncStatus == .syncing {
+                        ProgressView()
+                            .tint(.white)
+                            .scaleEffect(0.6)
+                    } else {
+                        Image(systemName: iconName)
+                            .font(.system(size: 12, weight: .black))
+                            .foregroundColor(.white)
+                    }
                 }
                 
-                Text("Verification Successful")
+                Text(message)
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
             }
@@ -424,6 +436,36 @@ struct ToastView: View {
             .padding(.top, 2)
             
             Spacer()
+        }
+    }
+    
+    private var iconName: String {
+        switch syncStatus {
+        case .success: return "checkmark"
+        case .idle: return "checkmark"
+        case .failed: return "xmark"
+        case .syncing: return "circle"
+        case .noEmail: return "exclamationmark.circle"
+        }
+    }
+    
+    private var iconColor: Color {
+        switch syncStatus {
+        case .success: return .green
+        case .idle: return .green
+        case .failed: return .red
+        case .syncing: return .blue
+        case .noEmail: return .orange
+        }
+    }
+    
+    private var message: LocalizedStringKey {
+        switch syncStatus {
+        case .success: return "Verification_Success"
+        case .idle: return "Verification_Success"
+        case .syncing: return "Sync_Status_Syncing"
+        case .failed: return "Sync_Status_Failed"
+        case .noEmail: return "Sync_Status_NoEmail"
         }
     }
 }

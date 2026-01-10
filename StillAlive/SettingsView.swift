@@ -20,11 +20,11 @@ struct SettingsView: View {
                     Picker("Timeout Duration", selection: $manager.checkInIntervalHours) {
                         ForEach(intervals, id: \.self) { hour in
                             if hour == -1 {
-                                Text("10 Seconds (Test)").tag(hour)
+                                Text("Test_10s").tag(hour)
                             } else if hour == -2 {
-                                Text("1 Hour (Test)").tag(hour)
+                                Text("Test_1h").tag(hour)
                             } else {
-                                Text("\(hour) Hours").tag(hour)
+                                Text(String(format: NSLocalizedString("X_Hours", comment: ""), hour)).tag(hour)
                             }
                         }
                     }

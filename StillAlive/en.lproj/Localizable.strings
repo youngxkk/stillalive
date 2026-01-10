@@ -8,15 +8,25 @@
 
 /* App Strings */
 "App_Title" = "Are You OK";
-"App_Subtitle" = "Still Alive";
+"App_Subtitle" = "Are You OK";
+
+"Status_Active" = "Protocol: Active";
+"Status_Required" = "Action Required";
+"Status_Alert" = "Alert Triggered";
 
 "Time Remaining" = "Time Remaining";
 "Check-in Required" = "Check-in Required";
 "Emergency Alert" = "Emergency Alert";
 
+"Last_Verification" = "LAST VERIFICATION";
 "Last check-in" = "Last check-in";
-"I'M ALIVE" = "I'M ALIVE";
-"Check-in Confirmed" = "Check-in";
+"I'M OK" = "I'M OK";
+"Verification_Success" = "Verification Successful";
+
+/* Sync Status */
+"Sync_Status_Syncing" = "Syncing with server...";
+"Sync_Status_Failed" = "Server Sync Failed";
+"Sync_Status_NoEmail" = "Please set contact email first";
 
 /* Settings */
 "Settings" = "Settings";
@@ -26,6 +36,9 @@
 "Check-In Configuration" = "Check-In Configuration";
 "Timeout Duration" = "Timeout Duration";
 "Hours" = "Hours";
+"Test_10s" = "10 Seconds (Test)";
+"Test_1h" = "1 Hour (Test)";
+"X_Hours" = "%d Hours";
 
 "Language" = "Language";
 "System Default" = "System Default";
@@ -45,12 +58,22 @@
 "Subject" = "Subject";
 "Enter message body..." = "Enter message body...";
 "Send Test Email" = "Send Test Email";
+"Test_Via_Server" = "Email Delivery Test (via Backend)";
+"Test_Limit_Description" = "To prevent abuse, test emails are limited to once every 24 hours.";
+"Test_Email_Sent_Success" = "Test email requested successfully";
+"Test_Email_Sent_Failed" = "Failed to request test email";
+"Invalid_Email" = "Invalid Email Format";
 "Mail_Config_Error_Title" = "Mail Account Not Setup";
 "Mail_Config_Error_Message" = "Please configure your email account in the system 'Settings > Mail' to send emails.";
 "Can't send mail" = "Can't send mail";
 
-/* Notifications - Keys used in code */
+/* Notifications */
 "Notification_Title_Warning" = "Are You OK?";
 "Notification_Body_Warning" = "You haven't checked in. Only 1 hour remaining before alert.";
 "Notification_Title_Expired" = "Emergency Alert Pending";
 "Notification_Body_Expired" = "Time expired! Please check in immediately.";
+
+/* Default Email Content */
+"Default_Email_Subject" = "Emergency Alert: I haven't checked in / 紧急警报：我还没报平安";
+"Default_Email_Body" = "I have failed to check in on my 'Are You OK' app on time. Please contact me immediately to ensure I am safe.\n---\n我没能在 Are You OK App 上按时打卡。这代表我可能遇到了突发状况，请立即联系我确认我的安全。";
+"Email_Body_Hint" = "Please include your name, phone, address, and door lock codes to help your friends find you quickly.";
