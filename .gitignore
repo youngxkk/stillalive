@@ -1,0 +1,39 @@
+# Xcode
+#
+# gitignore contributors: codebird, taylorswift, chrome91, swisspol, gfontenot
+
+## Build results
+build/
+DerivedData/
+
+## Dependency managers
+### CocoaPods
+# Pods/
+# *.xcworkspace
+
+### Carthage
+# Carthage/Build/
+
+### Swift Package Manager
+.build/
+.swiftpm/
+
+## User-specific files
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+*.userdata
+/xcuserdata/
+
+## Scripts
+# *.sh
+
+## Miscellaneous
+*.DS_Store
+*.swp
+*.lock
+*~.nib
+
+## Generic setup
+.idea/
+.vscode/

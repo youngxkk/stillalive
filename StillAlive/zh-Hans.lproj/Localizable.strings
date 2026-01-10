@@ -1,0 +1,56 @@
+/* 
+  Localizable.strings
+  StillAlive
+
+  Created by deepsea on 2026/1/10.
+  
+*/
+
+/* App Strings */
+"App_Title" = "Are You OK";
+"App_Subtitle" = "I'm OK";
+
+"Time Remaining" = "倒计时";
+"Check-in Required" = "请尽快打卡";
+"Emergency Alert" = "紧急警报";
+
+"Last check-in" = "上次打卡";
+"I'M ALIVE" = "我还活着";
+"Check-in Confirmed" = "已打卡";
+
+/* Settings */
+"Settings" = "设置";
+"Done" = "完成";
+"OK" = "好";
+
+"Check-In Configuration" = "打卡设置";
+"Timeout Duration" = "超时时间";
+"Hours" = "小时";
+
+"Language" = "语言";
+"System Default" = "系统默认";
+"Appearance" = "外观";
+"Light" = "浅色";
+"Dark" = "深色";
+"System" = "系统默认";
+
+"About Us" = "关于我们";
+"Privacy Policy" = "隐私政策";
+"Terms of Use" = "用户协议";
+
+"Emergency Contact" = "紧急联系人";
+"Message Content" = "邮件内容";
+"This email will be used when the timer expires." = "倒计时结束时将发送邮件给该联系人。";
+"Recipient Email" = "接收人邮箱";
+"Subject" = "邮件主题";
+"Enter message body..." = "输入邮件内容...";
+"Send Test Email" = "发送测试邮件";
+"Mail_Config_Error_Title" = "未设置邮箱账户";
+"Mail_Config_Error_Message" = "请在系统“设置 -> 邮件”中配置好您的邮箱账户后再试。";
+"Can't send mail" = "无法发送邮件";
+
+/* Notifications - Keys used in code */
+"Notification_Title_Warning" = "你还好吗？";
+"Notification_Body_Warning" = "你还没打卡，距离警报只剩1小时。";
+"Notification_Title_Expired" = "紧急警报待发送";
+"Notification_Body_Expired" = "时间已到！请立即打卡。";

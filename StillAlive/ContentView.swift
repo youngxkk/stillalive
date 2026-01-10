@@ -1,0 +1,438 @@
+import SwiftUI
+
+struct ContentView: View {
+    @EnvironmentObject var manager: AliveManager
+    @State private var showSettings = false
+    @State private var showContact = false
+    @AppStorage("appAppearance") var appAppearance: Int = 0
+
+    @State private var showToast = false
+    @State private var pulse = false
+    @State private var appear = false
+    
+    var body: some View {
+        NavigationStack {
+            GeometryReader { geo in
+                let scale = calculateScale(size: geo.size)
+                
+                ZStack {
+                    // MARK: - Liquid Background
+                    LiquidBackground(status: visualStatus)
+                        .ignoresSafeArea()
+                    
+                    // MARK: - Noise Texture Overlay
+                    NoiseTexture()
+                        .opacity(0.12)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 30 * scale) {
+                        Spacer()
+                        
+                        // MARK: - Main Glass Card
+                        VStack(spacing: 20 * scale) {
+                            Text(statusTitle)
+                                .font(.system(size: 14 * scale, weight: .black, design: .rounded))
+                                .textCase(.uppercase)
+                                .tracking(4)
+                                .foregroundColor(.white.opacity(0.5))
+                            
+                            Text(timeString(from: manager.timeRemaining))
+                                .font(.system(size: 84 * scale, weight: .black, design: .rounded))
+                                .monospacedDigit()
+                                .minimumScaleFactor(0.4)
+                                .contentTransition(.numericText())
+                                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: manager.timeRemaining)
+                                .foregroundColor(.white)
+                                .shadow(color: .black.opacity(0.2), radius: 15, x: 0, y: 15)
+                        }
+                        .padding(.vertical, 50 * scale)
+                        .padding(.horizontal, 20 * scale)
+                        .frame(maxWidth: .infinity)
+                        .background {
+                            ZStack {
+                                // Main Frosted Glass
+                                RoundedRectangle(cornerRadius: 48 * scale, style: .continuous)
+                                    .fill(.ultraThinMaterial)
+                                
+                                // Edge Highlight
+                                RoundedRectangle(cornerRadius: 48 * scale, style: .continuous)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [.white.opacity(0.6), .white.opacity(0.1), .clear, .white.opacity(0.1), .white.opacity(0.3)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1.5
+                                    )
+                            }
+                        }
+                        .shadow(color: .black.opacity(0.15), radius: 40, x: 0, y: 30)
+                        .padding(.horizontal, 25)
+                        .scaleEffect(appear ? 1 : 0.9)
+                        .offset(y: appear ? 0 : 40)
+                        .opacity(appear ? 1 : 0)
+                        
+                        Spacer()
+                        
+                        // MARK: - Liquid Action Button
+                        Button(action: {
+                            triggerCheckIn()
+                        }) {
+                            ZStack {
+                                // Breath/Pulse effect
+                                Circle()
+                                    .fill(statusColor.opacity(0.3))
+                                    .frame(width: 280 * scale, height: 280 * scale)
+                                    .scaleEffect(pulse ? 1.2 : 1.0)
+                                    .blur(radius: pulse ? 25 : 15)
+                                
+                                // Outer Glass Ring
+                                Circle()
+                                    .fill(.ultraThinMaterial)
+                                    .frame(width: 200 * scale, height: 200 * scale)
+                                    .overlay {
+                                        Circle()
+                                            .stroke(.white.opacity(0.4), lineWidth: 1)
+                                    }
+                                
+                                // Inner Liquid Core
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [statusColor, statusColor.opacity(0.7)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 170 * scale, height: 170 * scale)
+                                    .shadow(color: statusColor.opacity(0.5), radius: 25, x: 0, y: 20)
+                                    .overlay {
+                                        // Highlight on the core
+                                        Circle()
+                                            .stroke(LinearGradient(colors: [.white.opacity(0.6), .clear], startPoint: .topLeading, endPoint: .center), lineWidth: 2)
+                                            .padding(2)
+                                    }
+                                
+                                VStack(spacing: 8 * scale) {
+                                    Image(systemName: "heart.fill")
+                                        .font(.system(size: 44 * scale, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 5)
+                                    
+                                    Text("CHECK IN")
+                                        .font(.system(size: 14 * scale, weight: .black, design: .rounded))
+                                        .tracking(2)
+                                        .foregroundColor(.white)
+                                }
+                            }
+                        }
+                        .buttonStyle(ScaleButtonStyle())
+                        .offset(y: appear ? 0 : 80)
+                        .opacity(appear ? 1 : 0)
+                        
+                        Spacer()
+                        
+                        // MARK: - Bottom Info
+                        VStack(spacing: 8 * scale) {
+                            Text("LAST VERIFICATION")
+                                .font(.system(size: 11 * scale, weight: .black, design: .rounded))
+                                .tracking(2)
+                                .foregroundColor(.white.opacity(0.4))
+                            
+                            Text(manager.lastCheckInDate.formatted(date: .abbreviated, time: .shortened))
+                                .font(.system(size: 16 * scale, weight: .bold, design: .rounded))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .padding(.bottom, 30)
+                        .offset(y: appear ? 0 : 30)
+                        .opacity(appear ? 1 : 0)
+                    }
+                    .frame(maxWidth: 600)
+                    .padding()
+                    
+                    // MARK: - Toast Overlay
+                    if showToast {
+                        ToastView()
+                            .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity), removal: .opacity))
+                            .zIndex(2)
+                    }
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("App_Title")
+                        .font(.system(size: 20, weight: .black, design: .rounded))
+                        .tracking(3)
+                        .foregroundColor(.white)
+                        .opacity(0.9)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 20) {
+                        Button(action: { showContact = true }) {
+                            Image(systemName: "person.crop.circle")
+                                .font(.title3)
+                                .symbolRenderingMode(.hierarchical)
+                        }
+                        
+                        Button(action: { showSettings = true }) {
+                            Image(systemName: "gear")
+                                .font(.title3)
+                                .fontWeight(.bold)
+                        }
+                    }
+                    .foregroundColor(.white.opacity(0.8))
+                }
+            }
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .sheet(isPresented: $showSettings) {
+                SettingsView(manager: manager)
+            }
+            .sheet(isPresented: $showContact) {
+                ContactView(manager: manager)
+            }
+            .onAppear {
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.8)) {
+                    appear = true
+                }
+                withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) {
+                    pulse = true
+                }
+            }
+        }
+        .preferredColorScheme(appAppearance == 0 ? nil : (appAppearance == 1 ? .light : .dark))
+    }
+    
+    // MARK: - Actions
+    
+    private func triggerCheckIn() {
+        let impact = UIImpactFeedbackGenerator(style: .rigid)
+        impact.prepare()
+        impact.impactOccurred()
+        
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+            manager.checkIn()
+            
+            showToast = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                withAnimation(.easeIn(duration: 0.4)) {
+                    showToast = false
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private var visualStatus: AliveManager.AliveStatus {
+        if manager.timeRemaining <= 600 { // 10 minutes
+            return .danger
+        } else if manager.timeRemaining <= 3600 { // 1 hour
+            return .warning
+        } else {
+            return .safe
+        }
+    }
+    
+    func calculateScale(size: CGSize) -> CGFloat {
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return min(size.width, size.height) / 480.0
+        }
+        return 1.0
+    }
+    
+    var statusTitle: LocalizedStringKey {
+        switch visualStatus {
+        case .safe: return "Protocol: Active"
+        case .warning: return "Action Required"
+        case .danger: return "Alert Triggered"
+        }
+    }
+    
+    var statusColor: Color {
+        switch visualStatus {
+        case .safe: return Color(hex: "00F260")
+        case .warning: return Color(hex: "FFB347")
+        case .danger: return Color(hex: "FF4B2B")
+        }
+    }
+    
+    func timeString(from timeInterval: TimeInterval) -> String {
+        if timeInterval <= 0 { return "00:00:00" }
+        let hours = Int(timeInterval) / 3600
+        let minutes = Int(timeInterval) / 60 % 60
+        let seconds = Int(timeInterval) % 60
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
+}
+
+// MARK: - Subviews
+
+struct LiquidBackground: View {
+    let status: AliveManager.AliveStatus
+    @State private var animate = false
+    
+    var body: some View {
+        ZStack {
+            // Main Base Color
+            bgColor.ignoresSafeArea()
+            
+            // Animated Blobs
+            Canvas { context, size in
+                context.addFilter(.alphaThreshold(min: 0.5, color: bgColor))
+                context.addFilter(.blur(radius: 40))
+                
+                context.drawLayer { ctx in
+                    for index in 0..<3 {
+                        let rect = rect(for: index, in: size)
+                        ctx.fill(Circle().path(in: rect), with: .color(blobColor(for: index)))
+                    }
+                }
+            }
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 12).repeatForever(autoreverses: true)) {
+                animate.toggle()
+            }
+        }
+    }
+    
+    func rect(for index: Int, in size: CGSize) -> CGRect {
+        let width = size.width * 0.8
+        let height = width
+        
+        var x = size.width / 2 - width / 2
+        var y = size.height / 2 - height / 2
+        
+        switch index {
+        case 0:
+            x += animate ? 120 : -100
+            y += animate ? -180 : 100
+        case 1:
+            x += animate ? -150 : 150
+            y += animate ? 200 : -150
+        case 2:
+            x += animate ? 80 : -120
+            y += animate ? 150 : 250
+        default:
+            break
+        }
+        
+        return CGRect(x: x, y: y, width: width, height: height)
+    }
+    
+    var bgColor: Color {
+        switch status {
+        case .safe: return Color(hex: "0F2027") // Deep Night Blue
+        case .warning: return Color(hex: "1F1405") // Deep Amber Black
+        case .danger: return Color(hex: "1A0505") // Deep Crimson Black
+        }
+    }
+    
+    func blobColor(for index: Int) -> Color {
+        switch status {
+        case .safe:
+            return index == 0 ? Color(hex: "2193b0") : (index == 1 ? Color(hex: "6dd5ed") : Color(hex: "00F260"))
+        case .warning:
+            return index == 0 ? Color(hex: "FFB347") : (index == 1 ? Color(hex: "F2994A") : Color(hex: "EB5757"))
+        case .danger:
+            return index == 0 ? Color(hex: "FF4B2B") : (index == 1 ? Color(hex: "8E0E00") : Color(hex: "4b1212"))
+        }
+    }
+}
+
+struct NoiseTexture: View {
+    var body: some View {
+        GeometryReader { geo in
+            Canvas { context, size in
+                for x in stride(from: 0, to: size.width, by: 4) {
+                    for y in stride(from: 0, to: size.height, by: 4) {
+                        let opacity = Double.random(in: 0...1)
+                        context.opacity = opacity
+                        context.fill(Path(CGRect(x: x, y: y, width: 2, height: 2)), with: .color(.white))
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct ToastView: View {
+    var body: some View {
+        VStack {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(.green)
+                        .frame(width: 24, height: 24)
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundColor(.white)
+                }
+                
+                Text("Verification Successful")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+            }
+            .padding(.vertical, 14)
+            .padding(.horizontal, 24)
+            .background {
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Capsule()
+                            .stroke(.white.opacity(0.3), lineWidth: 0.5)
+                    }
+            }
+            .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+            .padding(.top, 10)
+            
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Styles
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Extensions
+
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
+#Preview {
+    ContentView()
+        .environmentObject(AliveManager())
+}

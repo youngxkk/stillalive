@@ -1,0 +1,56 @@
+/* 
+  Localizable.strings
+  StillAlive
+
+  Created by deepsea on 2026/1/10.
+  
+*/
+
+/* App Strings */
+"App_Title" = "Are You OK";
+"App_Subtitle" = "Still Alive";
+
+"Time Remaining" = "Time Remaining";
+"Check-in Required" = "Check-in Required";
+"Emergency Alert" = "Emergency Alert";
+
+"Last check-in" = "Last check-in";
+"I'M ALIVE" = "I'M ALIVE";
+"Check-in Confirmed" = "Check-in";
+
+/* Settings */
+"Settings" = "Settings";
+"Done" = "Done";
+"OK" = "OK";
+
+"Check-In Configuration" = "Check-In Configuration";
+"Timeout Duration" = "Timeout Duration";
+"Hours" = "Hours";
+
+"Language" = "Language";
+"System Default" = "System Default";
+"Appearance" = "Appearance";
+"Light" = "Light";
+"Dark" = "Dark";
+"System" = "System Default";
+
+"About Us" = "About Us";
+"Privacy Policy" = "Privacy Policy";
+"Terms of Use" = "Terms of Use";
+
+"Emergency Contact" = "Emergency Contact";
+"Message Content" = "Message Content";
+"This email will be used when the timer expires." = "This email will be used when the timer expires.";
+"Recipient Email" = "Recipient Email";
+"Subject" = "Subject";
+"Enter message body..." = "Enter message body...";
+"Send Test Email" = "Send Test Email";
+"Mail_Config_Error_Title" = "Mail Account Not Setup";
+"Mail_Config_Error_Message" = "Please configure your email account in the system 'Settings > Mail' to send emails.";
+"Can't send mail" = "Can't send mail";
+
+/* Notifications - Keys used in code */
+"Notification_Title_Warning" = "Are You OK?";
+"Notification_Body_Warning" = "You haven't checked in. Only 1 hour remaining before alert.";
+"Notification_Title_Expired" = "Emergency Alert Pending";
+"Notification_Body_Expired" = "Time expired! Please check in immediately.";
