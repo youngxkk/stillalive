@@ -6,12 +6,8 @@ class AliveManager: ObservableObject {
     // MARK: - Persistent Storage
     @AppStorage("lastCheckInTime") private var lastCheckInTimeTimestamp: Double = Date().timeIntervalSince1970
     
-    @Published var checkInIntervalHours: Int = {
-        let val = UserDefaults.standard.integer(forKey: "checkInIntervalHours")
-        return val == 0 ? 24 : val
-    }() {
+    @AppStorage("checkInIntervalHours") var checkInIntervalHours: Int = 24 {
         didSet {
-            UserDefaults.standard.set(checkInIntervalHours, forKey: "checkInIntervalHours")
             checkIn()
         }
     }
@@ -68,7 +64,7 @@ class AliveManager: ObservableObject {
         timer?.invalidate()
     }
     
-    private let backendURL = URL(string: "https://still-alive-backend.youngxkk.workers.dev/checkin")!
+    private let backendURL = URL(string: "https://api.maxc.cc/checkin")!
 
     func checkIn() {
         lastCheckInTimeTimestamp = Date().timeIntervalSince1970
@@ -96,6 +92,8 @@ class AliveManager: ObservableObject {
         
         self.syncStatus = .syncing
         
+        let normalizedEmail = contactEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        
         // Calculate actual interval in hours
         let interval: Double
         if checkInIntervalHours == -1 {
@@ -107,7 +105,7 @@ class AliveManager: ObservableObject {
         }
         
         let payload: [String: Any] = [
-            "email": contactEmail,
+            "email": normalizedEmail,
             "intervalHours": interval,
             "subject": finalSubject,
             "body": finalBody
@@ -184,8 +182,10 @@ class AliveManager: ObservableObject {
         let finalSubject = emailSubject.isEmpty ? NSLocalizedString("Default_Email_Subject", comment: "") : "[TEST] \(emailSubject)"
         let finalBody = emailBody.isEmpty ? NSLocalizedString("Default_Email_Body", comment: "") : "[This is a test message from Are You OK]\n\n" + emailBody
         
+        let normalizedEmail = contactEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
         let payload: [String: Any] = [
-            "email": contactEmail,
+            "email": normalizedEmail,
             "intervalHours": 0, // 0 can signify an immediate test on backend
             "subject": finalSubject,
             "body": finalBody,

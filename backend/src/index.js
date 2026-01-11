@@ -25,11 +25,13 @@ export default {
           return new Response("Missing email or intervalHours", { status: 400 });
         }
 
+        const normalizedEmail = data.email.trim().toLowerCase();
+
         // 如果是测试请求，立即发送邮件且不存入 KV (或者存入但标记为测试)
         if (data.isTest) {
-          console.log(`Sending test email to ${data.email}...`);
+          console.log(`Sending test email to ${normalizedEmail}...`);
           const emailSuccess = await sendEmail(env, {
-            targetEmail: data.email,
+            targetEmail: normalizedEmail,
             subject: data.subject || "Test Email",
             body: data.body || "This is a test."
           });
@@ -50,7 +52,7 @@ export default {
         const statusRecord = {
           lastCheckIn: Date.now(), // 当前时间毫秒
           intervalHours: data.intervalHours,
-          targetEmail: data.email, // 接收告警的邮箱
+          targetEmail: normalizedEmail, // 接收告警的邮箱
           subject: data.subject || "Emergency Alert",
           body: data.body || "I have not checked in.",
           status: "safe", // 当前状态
@@ -58,7 +60,7 @@ export default {
         };
 
         // 存入 KV 数据库
-        await env.STATUS_STORE.put(`user:${data.email}`, JSON.stringify(statusRecord));
+        await env.STATUS_STORE.put(`user:${normalizedEmail}`, JSON.stringify(statusRecord));
 
         return new Response(JSON.stringify({ success: true, message: "Check-in successful" }), {
           headers: { "Content-Type": "application/json" }
@@ -76,40 +78,49 @@ export default {
   async scheduled(event, env, ctx) {
     console.log("Cron trigger started...");
 
-    // 获取所有用户数据 (简单版：生产环境可能需要分页 list)
-    // Cloudflare KV list api
-    const list = await env.STATUS_STORE.list({ prefix: "user:" });
+    let cursor = null;
+    let totalProcessed = 0;
 
-    for (const key of list.keys) {
-      const userRecordStr = await env.STATUS_STORE.get(key.name);
-      if (!userRecordStr) continue;
+    do {
+      // Cloudflare KV list api with pagination
+      const list = await env.STATUS_STORE.list({
+        prefix: "user:",
+        cursor: cursor
+      });
 
-      let userRecord = JSON.parse(userRecordStr);
-      const now = Date.now();
+      for (const key of list.keys) {
+        const userRecordStr = await env.STATUS_STORE.get(key.name);
+        if (!userRecordStr) continue;
 
-      // 计算截止时间 (毫秒)
-      const expirationTime = userRecord.lastCheckIn + (userRecord.intervalHours * 60 * 60 * 1000);
+        let userRecord = JSON.parse(userRecordStr);
+        const now = Date.now();
 
-      // 检查是否超时
-      if (now > expirationTime) {
-        // 已经超时，检查是否已经发过邮件
-        if (!userRecord.hasSentEmail) {
-          console.log(`Sending email for ${userRecord.targetEmail}...`);
+        // 计算截止时间 (毫秒)
+        const expirationTime = userRecord.lastCheckIn + (userRecord.intervalHours * 60 * 60 * 1000);
 
-          const emailSuccess = await sendEmail(env, userRecord);
+        // 检查是否超时
+        if (now > expirationTime) {
+          // 已经超时，检查是否已经发过邮件
+          if (!userRecord.hasSentEmail) {
+            console.log(`Sending email for ${userRecord.targetEmail}...`);
 
-          if (emailSuccess) {
-            // 更新状态为已发送，避免每10分钟发一次轰炸
-            userRecord.hasSentEmail = true;
-            userRecord.status = "danger";
-            await env.STATUS_STORE.put(key.name, JSON.stringify(userRecord));
+            const emailSuccess = await sendEmail(env, userRecord);
+
+            if (emailSuccess) {
+              // 更新状态为已发送，避免重复发送
+              userRecord.hasSentEmail = true;
+              userRecord.status = "danger";
+              await env.STATUS_STORE.put(key.name, JSON.stringify(userRecord));
+            }
           }
         }
-      } else {
-        // 如果用户及时 check-in 了，状态应该是 safe，这在 fetch 里已经更新了
-        // 这里不需要做什么
+        totalProcessed++;
       }
-    }
+
+      cursor = list.cursor;
+    } while (cursor);
+
+    console.log(`Cron trigger finished. Total records processed: ${totalProcessed}`);
   }
 };
 
@@ -128,10 +139,21 @@ async function sendEmail(env, userRecord) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      from: "Are You OK APP <onboarding@resend.dev>", // 免费测试账号只能用这个发
-      to: [userRecord.targetEmail], // 必须是你注册 Resend 时验证过的邮箱 (测试版限制)
+      from: "Are You OK App <alert@maxc.cc>", // 现在你可以使用自己的域名发信了
+      to: [userRecord.targetEmail], // 现在可以发送给任何邮箱了 (因为域名已验证)
       subject: userRecord.subject,
-      html: `<p>${userRecord.body}</p><br><p>Sent automatically by Are You OK App Server.</p>`
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 12px; background-color: #ffffff;">
+          <h2 style="color: #333; border-bottom: 2px solid #00F260; padding-bottom: 10px;">Emergency Alert</h2>
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            ${userRecord.body.replace(/\n/g, '<br>')}
+          </p>
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999;">
+            <p>Sent automatically by <strong>Are You OK</strong> App Server.</p>
+            <p>This alert was triggered because the user failed to check in within their set interval (${userRecord.intervalHours} hours).</p>
+          </div>
+        </div>
+      `
     })
   });
 

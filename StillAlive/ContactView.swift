@@ -10,9 +10,10 @@ struct ContactView: View {
     @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
     
     var isEmailValid: Bool {
+        let trimmed = manager.contactEmail.trimmingCharacters(in: .whitespacesAndNewlines)
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
-        return emailPred.evaluate(with: manager.contactEmail)
+        return emailPred.evaluate(with: trimmed)
     }
     
     var body: some View {
@@ -60,6 +61,20 @@ struct ContactView: View {
                          }
                      }
                      .disabled(manager.contactEmail.isEmpty || !isEmailValid || !manager.canSendTestEmail() || manager.syncStatus == .syncing)
+                     
+                     Button(action: {
+                         if MFMailComposeViewController.canSendMail() {
+                             showMailView = true
+                         } else {
+                             showErrorAlert = true
+                         }
+                     }) {
+                         HStack {
+                             Image(systemName: "envelope")
+                             Text("Send Test Email")
+                         }
+                     }
+                     .disabled(manager.contactEmail.isEmpty || !isEmailValid)
                  }
             }
             .navigationTitle("Emergency Contact")

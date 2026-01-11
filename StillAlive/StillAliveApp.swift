@@ -1,6 +1,6 @@
 //
-//  StillAliveApp.swift
-//  StillAlive
+//  AreYouOKApp.swift
+//  AreYouOK
 //
 //  Created by deepsea on 2026/1/10.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct StillAliveApp: App {
+struct AreYouOKApp: App {
     @StateObject private var manager = AliveManager()
     @AppStorage("appAppearance") var appAppearance: Int = 0
     
