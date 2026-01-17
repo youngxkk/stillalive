@@ -40,6 +40,10 @@
 "Test_1h" = "1 小时 (测试)";
 "X_Hours" = "%d 小时";
 
+"Notifications" = "通知设置";
+"Daily Reminder" = "每日提醒";
+"Reminder Time" = "提醒时间";
+
 "Language" = "语言";
 "System Default" = "系统默认";
 "Appearance" = "外观";
@@ -72,6 +76,8 @@
 "Notification_Body_Warning" = "你还没打卡，距离警报只剩1小时。";
 "Notification_Title_Expired" = "紧急警报待发送";
 "Notification_Body_Expired" = "时间已到！请立即打卡。";
+"Notification_Title_Reminder" = "记得打卡哦";
+"Notification_Body_Reminder" = "又是新的一天，别忘了报个平安。";
 
 /* Default Email Content */
 "Default_Email_Subject" = "紧急警报：我还没报平安 / Emergency Alert: I haven't checked in";

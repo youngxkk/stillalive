@@ -40,6 +40,10 @@
 "Test_1h" = "1 Hour (Test)";
 "X_Hours" = "%d Hours";
 
+"Notifications" = "Notifications";
+"Daily Reminder" = "Daily Reminder";
+"Reminder Time" = "Reminder Time";
+
 "Language" = "Language";
 "System Default" = "System Default";
 "Appearance" = "Appearance";
@@ -72,6 +76,8 @@
 "Notification_Body_Warning" = "You haven't checked in. Only 1 hour remaining before alert.";
 "Notification_Title_Expired" = "Emergency Alert Pending";
 "Notification_Body_Expired" = "Time expired! Please check in immediately.";
+"Notification_Title_Reminder" = "Remember to check in";
+"Notification_Body_Reminder" = "It's a new day, don't forget to mark yourself safe.";
 
 /* Default Email Content */
 "Default_Email_Subject" = "Emergency Alert: I haven't checked in / 紧急警报：我还没报平安";

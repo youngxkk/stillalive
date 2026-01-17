@@ -33,6 +33,25 @@ struct SettingsView: View {
                     }
                 }
                 
+                Section(header: Text(NSLocalizedString("Notifications", comment: ""))) {
+                    Toggle(NSLocalizedString("Daily Reminder", comment: ""), isOn: $manager.dailyReminderEnabled)
+                    
+                    if manager.dailyReminderEnabled {
+                        DatePicker(NSLocalizedString("Reminder Time", comment: ""), selection: Binding(
+                            get: {
+                                let totalSeconds = Int(manager.dailyReminderTime)
+                                let hour = totalSeconds / 3600
+                                let minute = (totalSeconds % 3600) / 60
+                                return Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+                            },
+                            set: { newDate in
+                                let components = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                manager.dailyReminderTime = Double((components.hour ?? 0) * 3600 + (components.minute ?? 0) * 60)
+                            }
+                        ), displayedComponents: .hourAndMinute)
+                    }
+                }
+                
                 Section(header: Text("Appearance")) {
                     Picker("Appearance", selection: $appAppearance) {
                         Text("System").tag(0)

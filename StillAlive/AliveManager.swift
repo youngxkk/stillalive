@@ -18,6 +18,19 @@ class AliveManager: ObservableObject {
     
     @AppStorage("isMonitoringEnabled") var isMonitoringEnabled: Bool = true
     @AppStorage("lastTestEmailSentTime") private var lastTestEmailSentTimeInterval: Double = 0
+    
+    @AppStorage("dailyReminderEnabled") var dailyReminderEnabled: Bool = false {
+        didSet {
+            scheduleNotifications()
+        }
+    }
+    
+    @AppStorage("dailyReminderTime") var dailyReminderTime: Double = 32400 // Default to 9:00 AM (9 * 3600)
+    {
+        didSet {
+            scheduleNotifications()
+        }
+    }
 
     // MARK: - Published State
     @Published var timeRemaining: TimeInterval = 0
@@ -270,6 +283,26 @@ class AliveManager: ObservableObject {
             let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
             
             let request = UNNotificationRequest(identifier: "expired-notification", content: content, trigger: trigger)
+            center.add(request)
+        }
+        
+        // 3. Daily Reminder Notification
+        if dailyReminderEnabled {
+            let content = UNMutableNotificationContent()
+            content.title = NSLocalizedString("Notification_Title_Reminder", comment: "Daily Reminder Title")
+            content.body = NSLocalizedString("Notification_Body_Reminder", comment: "Daily Reminder Body")
+            content.sound = .default
+            
+            let totalSeconds = Int(dailyReminderTime)
+            let hour = totalSeconds / 3600
+            let minute = (totalSeconds % 3600) / 60
+            
+            var dateComponents = DateComponents()
+            dateComponents.hour = hour
+            dateComponents.minute = minute
+            
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let request = UNNotificationRequest(identifier: "daily-reminder-notification", content: content, trigger: trigger)
             center.add(request)
         }
     }
