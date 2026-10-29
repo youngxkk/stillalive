@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="14"/></filter></defs>
+<rect width="1024" height="1024" rx="228" fill="#FAF6EE"/>
+<g filter="url(#rough)">
+<rect x="212" y="212" width="600" height="600" rx="40" fill="#C0392B"/>
+<rect x="252" y="252" width="520" height="520" rx="18" fill="none" stroke="#FAF6EE" stroke-width="14"/>
+<text x="512" y="672" text-anchor="middle" font-family="'Songti SC', 'STSong', 'Kaiti SC', serif" font-weight="900" font-size="440" fill="#FAF6EE">安</text>
+</g>
+</svg>

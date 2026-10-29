@@ -1,11 +1,12 @@
 import SwiftUI
 
-struct ContentView: View {
+struct HomeView: View {
     @EnvironmentObject var manager: AliveManager
     @Environment(\.colorScheme) var colorScheme
-    @State private var showSettings = false
-    @State private var showContact = false
+    var onShowOuting: () -> Void = {}
     @AppStorage("appAppearance") var appAppearance: Int = 0
+    @AppStorage("hapticsEnabled") var hapticsEnabled = true
+    @State private var checkInCount = 0
 
     @State private var showToast = false
     @State private var pulse = false
@@ -88,6 +89,12 @@ struct ContentView: View {
                         .shadow(color: Color.primary.opacity(0.1), radius: 40, x: 0, y: 30)
                         .padding(.horizontal, 25)
                         .opacity(appear ? 1 : 0) // Keep fade-in only, no motion
+                        
+                        // MARK: - Outing Guard Banner
+                        if manager.isOutingActive {
+                            OutingBanner(timeRemaining: manager.outingTimeRemaining, scale: scale, action: onShowOuting)
+                                .transition(.opacity)
+                        }
                         
                         Spacer()
                         
@@ -181,29 +188,10 @@ struct ContentView: View {
                         .foregroundColor(.primary)
                         .opacity(0.9)
                 }
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: { showContact = true }) {
-                        Image(systemName: "person.crop.circle")
-                            .font(.title3)
-                            .symbolRenderingMode(.hierarchical)
-                            .foregroundColor(.primary)
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showSettings = true }) {
-                        Image(systemName: "gear")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.primary)
-                    }
-                }
             }
             .toolbarBackground(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showSettings) {
-                SettingsView(manager: manager)
-            }
-            .sheet(isPresented: $showContact) {
-                ContactView(manager: manager)
+            .sensoryFeedback(trigger: checkInCount) { _, _ in
+                hapticsEnabled ? .impact(flexibility: .rigid) : nil
             }
             .onAppear {
                 withAnimation(.spring(response: 0.8, dampingFraction: 0.8)) {
@@ -220,9 +208,7 @@ struct ContentView: View {
     // MARK: - Actions
     
     private func triggerCheckIn() {
-        let impact = UIImpactFeedbackGenerator(style: .rigid)
-        impact.prepare()
-        impact.impactOccurred()
+        checkInCount += 1
         
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
             manager.checkIn()
@@ -279,6 +265,39 @@ struct ContentView: View {
 }
 
 // MARK: - Subviews
+
+struct OutingBanner: View {
+    let timeRemaining: TimeInterval
+    let scale: CGFloat
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8 * scale) {
+                Image(systemName: "figure.walk")
+                Text("Outing_Banner")
+                Text(timeRemaining > 0 ? Duration.seconds(timeRemaining).formatted(.time(pattern: .hourMinuteSecond)) : "00:00:00")
+                    .monospacedDigit()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11 * scale, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+            .font(.system(size: 14 * scale, weight: .bold, design: .rounded))
+            .foregroundStyle(timeRemaining > 0 ? Color.primary : Color.red)
+            .padding(.vertical, 10 * scale)
+            .padding(.horizontal, 18 * scale)
+            .background {
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .overlay {
+                        Capsule()
+                            .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+                    }
+            }
+        }
+        .buttonStyle(ScaleButtonStyle())
+    }
+}
 
 struct LiquidBackground: View {
     let status: AliveManager.AliveStatus
@@ -442,6 +461,7 @@ struct ToastView: View {
     private var iconName: String {
         switch syncStatus {
         case .success: return "checkmark"
+        case .allClearSent: return "envelope.fill"
         case .idle: return "checkmark"
         case .failed: return "xmark"
         case .syncing: return "circle"
@@ -452,6 +472,7 @@ struct ToastView: View {
     private var iconColor: Color {
         switch syncStatus {
         case .success: return .green
+        case .allClearSent: return .green
         case .idle: return .green
         case .failed: return .red
         case .syncing: return .blue
@@ -462,6 +483,7 @@ struct ToastView: View {
     private var message: LocalizedStringKey {
         switch syncStatus {
         case .success: return "Verification_Success"
+        case .allClearSent: return "All_Clear_Sent"
         case .idle: return "Verification_Success"
         case .syncing: return "Sync_Status_Syncing"
         case .failed: return "Sync_Status_Failed"
@@ -478,6 +500,34 @@ struct ScaleButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? 0.88 : 1.0)
             .opacity(configuration.isPressed ? 0.9 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Glass Card
+
+extension View {
+    /// `highlight` lays extra white over the material to make the card stand out more
+    func glassCard(cornerRadius: CGFloat, highlight: Double = 0) -> some View {
+        background {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(Color.white.opacity(highlight))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.white.opacity(0.5), .white.opacity(0.05), .white.opacity(0.25)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                }
+                .shadow(color: Color.primary.opacity(0.06), radius: 20, x: 0, y: 12)
+        }
     }
 }
 
@@ -511,6 +561,6 @@ extension Color {
 }
 
 #Preview {
-    ContentView()
+    HomeView()
         .environmentObject(AliveManager())
 }

@@ -1,0 +1,8 @@
+/* Apple Watch */
+"Watch_CheckIn_Button" = "I'm OK";
+"Watch_Time_Left" = "Next check-in in";
+"Watch_Overdue" = "Overdue\nPlease check in now";
+"Watch_Checked_In" = "Checked in ✓";
+"Watch_Phone_Unreachable" = "Can't reach iPhone. Keep it nearby and try again.";
+"Watch_No_Contact" = "Set an emergency contact in the iPhone app first";
+"Watch_Open_Phone" = "Open Are You OK on your iPhone once to connect";

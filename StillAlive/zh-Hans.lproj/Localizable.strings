@@ -45,17 +45,36 @@
 "Reminder Time" = "提醒时间";
 
 "Language" = "语言";
-"System Default" = "系统默认";
 "Appearance" = "外观";
 "Light" = "浅色";
 "Dark" = "深色";
 "System" = "系统默认";
 
-"About Us" = "关于我们";
+"Display" = "显示";
+"General" = "通用";
+"Haptic Feedback" = "触感反馈";
+"Share with Friends" = "分享给朋友";
+"Rate Us" = "评价我们";
+"About_Title" = "关于 Are You OK";
+"About_Description" = "每天报个平安，忘记打卡时自动通知紧急联系人。";
+"Contact the Developer" = "联系开发者";
+"Feedback" = "反馈问题";
+"Xiaohongshu" = "小红书";
+"Terms and Privacy" = "协议相关";
 "Privacy Policy" = "隐私政策";
 "Terms of Use" = "用户协议";
+"Version" = "版本";
+
+"More Apps" = "更多作品";
+"OTHERAPPINFO_NexPaste" = "保存、同步，随时取用剪贴板内容";
+"OTHERAPP_Pixie" = "精灵壁纸";
+"OTHERAPPINFO_Pixie" = "高品质壁纸库";
+"OTHERAPP_Kiddo" = "菠萝英语";
+"OTHERAPPINFO_Kiddo" = "趣味英语启蒙";
+"OTHERAPPINFO_Invsi" = "私密相册";
 
 "Emergency Contact" = "紧急联系人";
+"Tab_Contact" = "紧急联系人";
 "Message Content" = "邮件内容";
 "This email will be used when the timer expires." = "倒计时结束时将发送邮件给该联系人。";
 "Recipient Email" = "接收人邮箱";
@@ -83,3 +102,64 @@
 "Default_Email_Subject" = "紧急警报：我还没报平安 / Emergency Alert: I haven't checked in";
 "Default_Email_Body" = "我没能在 Are You OK App 上按时打卡。这代表我可能遇到了突发状况，请立即尝试通过电话等方式联系我，确认我的安全。\n---\nI have failed to check in on my 'Are You OK' app on time. Please contact me immediately to ensure I am safe.";
 "Email_Body_Hint" = "请务必在内容中告知朋友你的名字、电话、居住地址、密码锁代码等关键信息，方便朋友过来安全地帮助你。";
+
+/* Tabs */
+"Tab_Home" = "报平安";
+"Tab_Outing" = "出门守护";
+
+/* All Clear */
+"All_Clear_Sent" = "已通知联系人：你平安了";
+"All_Clear_Email_Subject" = "警报解除：我已经报平安了 / All clear: I'm OK now";
+"All_Clear_Email_Body" = "我刚刚在 Are You OK App 上报了平安。之前的警报可以解除了，我很安全。\n---\nI have just checked in on my 'Are You OK' app. Sorry for the earlier alert, I'm safe.";
+
+/* Outing Guard */
+"Outing_Title" = "出门守护";
+"Outing_Description" = "夜跑、爬山、约会、深夜回家？设定一个预计返回时间，到时还没点「我已安全返回」，就会发邮件通知你的紧急联系人。";
+"Outing_Duration" = "多久回来";
+"Outing_Expected_Return" = "预计返回";
+"Outing_Note" = "备注";
+"Outing_Note_Placeholder" = "去哪里、和谁一起、怎么联系你…";
+"Outing_Note_Footer" = "如果没有按时返回，这段备注会和你的紧急邮件内容一起发给联系人。";
+"Outing_Start" = "开始守护";
+"Outing_Active" = "守护中";
+"Outing_Overdue" = "已超过预计返回时间";
+"Outing_Return_By" = "预计 %@ 前返回";
+"Outing_End" = "我已安全返回";
+"Outing_Extend" = "需要更多时间";
+"Outing_Active_Footer" = "开始、延长或结束守护，都会同时算作一次报平安。";
+"Outing_Ended" = "欢迎回来！出门守护已结束。";
+"Outing_Request_Failed" = "无法连接服务器，请检查网络后重试。";
+"Outing_Banner" = "出门守护";
+"Outing_Tomorrow" = "明天";
+"Outing_Notify_Contact" = "超时将通知 %@";
+"Outing_Remaining" = "剩余时间";
+"Outing_Overdue_By" = "已超时";
+"Outing_Overdue_Hint" = "紧急联系人可能已经收到通知。如果你安全，请立即按住下方按钮确认。";
+"Outing_Hold_Hint" = "长按";
+"Outing_Activity_night" = "夜归";
+"Outing_Activity_run" = "夜跑";
+"Outing_Activity_ride" = "骑行";
+"Outing_Activity_date" = "约会";
+"Outing_Activity_hike" = "爬山";
+"Outing_Activity_trip" = "远行";
+
+"Outing_Email_Subject" = "出门守护警报：我还没回来 / Outing alert: I'm not back yet";
+"Outing_Email_Details" = "我在 Are You OK App 开启了出门守护，但到了预计返回时间还没有报平安。\n\n备注：%@\n预计返回时间：%@（%@）";
+"Outing_Email_No_Note" = "（无）";
+
+"Notification_Title_Outing_Warning" = "快到返回时间了";
+"Notification_Body_Outing_Warning" = "出门守护还剩 15 分钟，请报平安或延长时间。";
+"Notification_Title_Outing_Expired" = "出门守护已到期";
+"Notification_Body_Outing_Expired" = "已超过预计返回时间，请立即报平安。";
+
+/* Contact Page */
+"Contact_Ready" = "错过报平安时会收到邮件";
+"Contact_Change_Photo" = "更换照片";
+"Contact_Remove_Photo" = "移除照片";
+"Contact_Not_Set" = "尚未设置联系人";
+"Contact_Email_Placeholder" = "friend@example.com";
+"Contact_Use_Default" = "恢复默认";
+"Contact_Test_Title" = "测试送达";
+"Contact_Test_Server" = "发送一封测试邮件";
+"Contact_Test_Mail_App" = "用系统邮件发送";
+"Contact_Test_Next" = "%@后可再次测试";

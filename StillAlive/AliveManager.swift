@@ -32,17 +32,38 @@ class AliveManager: ObservableObject {
         }
     }
 
+    // Outing guard: 0 means no active outing
+    @AppStorage("outingDeadline") private var outingDeadlineTimestamp: Double = 0
+    @AppStorage("outingNote") var outingNote: String = ""
+
     // MARK: - Published State
     @Published var timeRemaining: TimeInterval = 0
+    @Published var outingTimeRemaining: TimeInterval = 0
     @Published var status: AliveStatus = .safe
     @Published var syncStatus: SyncStatus = .idle
-    
+
     enum SyncStatus {
         case idle
         case syncing
         case success
+        case allClearSent
         case failed
         case noEmail
+    }
+
+    enum OutingResult {
+        case success
+        case allClearSent
+        case noEmail
+        case failed
+    }
+
+    var outingDeadline: Date? {
+        outingDeadlineTimestamp > 0 ? Date(timeIntervalSince1970: outingDeadlineTimestamp) : nil
+    }
+
+    var isOutingActive: Bool {
+        outingDeadline != nil
     }
     
     var lastCheckInDate: Date {
@@ -77,12 +98,17 @@ class AliveManager: ObservableObject {
         timer?.invalidate()
     }
     
-    private let backendURL = URL(string: "https://api.maxc.cc/checkin")!
+    private let backendBaseURL = URL(string: "https://api.maxc.cc")!
 
     func checkIn() {
         lastCheckInTimeTimestamp = Date().timeIntervalSince1970
+        // The server ends an outing whose expected return time has passed on check-in
+        if let deadline = outingDeadline, deadline <= Date() {
+            clearOuting()
+        }
         updateStatus()
         scheduleNotifications()
+        WatchBridge.shared.sendState()
         
         // Sync with backend server
         Task {
@@ -99,15 +125,59 @@ class AliveManager: ObservableObject {
             return
         }
         
+        self.syncStatus = .syncing
+
+        let (statusCode, json) = await request(path: "checkin", payload: configPayload())
+
+        if statusCode == 200 {
+            print("Server Sync Success")
+            let finalStatus: SyncStatus = (json?["allClearSent"] as? Bool == true) ? .allClearSent : .success
+            self.syncStatus = finalStatus
+            // Reset to idle after 3 seconds
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            if self.syncStatus == finalStatus { self.syncStatus = .idle }
+        } else {
+            print("Server Sync Failed: Status code \(statusCode ?? 0)")
+            self.syncStatus = .failed
+        }
+    }
+
+    /// Push contact/message changes to the server without resetting the timer.
+    /// Clearing the contact email stops server-side monitoring entirely.
+    func syncContactSettings() async {
+        let trimmedEmail = contactEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        WatchBridge.shared.sendState()
+
+        if trimmedEmail.isEmpty {
+            let statusCode = await post(path: "deregister", payload: credentials())
+            print("Server Deregister: Status code \(statusCode ?? 0)")
+            return
+        }
+
+        let statusCode = await post(path: "update", payload: configPayload())
+        if statusCode == 404 {
+            // Never checked in from this device yet: register now
+            await syncWithServer()
+        } else {
+            print("Server Update: Status code \(statusCode ?? 0)")
+        }
+    }
+
+    private func credentials() -> [String: Any] {
+        [
+            "deviceId": DeviceIdentity.deviceId,
+            "deviceSecret": DeviceIdentity.deviceSecret
+        ]
+    }
+
+    private func configPayload() -> [String: Any] {
         // Use localized defaults if empty
         let finalSubject = emailSubject.isEmpty ? NSLocalizedString("Default_Email_Subject", comment: "") : emailSubject
         let finalBody = emailBody.isEmpty ? NSLocalizedString("Default_Email_Body", comment: "") : emailBody
-        
-        self.syncStatus = .syncing
-        
+
         let normalizedEmail = contactEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        
-        // Calculate actual interval in hours
+
+        // Calculate actual interval in hours (the server enforces a 1 hour minimum)
         let interval: Double
         if checkInIntervalHours == -1 {
             interval = 10.0 / 3600.0 // 10 seconds for testing
@@ -116,36 +186,109 @@ class AliveManager: ObservableObject {
         } else {
             interval = Double(checkInIntervalHours)
         }
-        
-        let payload: [String: Any] = [
+
+        return credentials().merging([
             "email": normalizedEmail,
             "intervalHours": interval,
             "subject": finalSubject,
-            "body": finalBody
-        ]
-        
+            "body": finalBody,
+            // Sent to the contact if this check-in follows an alert
+            "allClearSubject": NSLocalizedString("All_Clear_Email_Subject", comment: ""),
+            "allClearBody": NSLocalizedString("All_Clear_Email_Body", comment: "")
+        ]) { _, new in new }
+    }
+
+    // MARK: - Outing Guard
+
+    /// Starts an outing guard: the contact is alerted if it isn't ended within `minutes`.
+    /// Starting an outing also counts as a check-in.
+    func startOuting(minutes: Int, note: String) async -> OutingResult {
+        guard !contactEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return .noEmail }
+
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let deadline = Date().addingTimeInterval(TimeInterval(minutes * 60))
+        let payload = configPayload().merging([
+            "outingMinutes": minutes,
+            "outingSubject": NSLocalizedString("Outing_Email_Subject", comment: ""),
+            "outingBody": outingEmailBody(note: trimmedNote, deadline: deadline)
+        ]) { _, new in new }
+
+        let (statusCode, json) = await request(path: "outing/start", payload: payload)
+        guard statusCode == 200 else { return .failed }
+
+        let serverDeadline = (json?["deadline"] as? Double).map { $0 / 1000 }
+        outingDeadlineTimestamp = serverDeadline ?? deadline.timeIntervalSince1970
+        outingNote = trimmedNote
+        lastCheckInTimeTimestamp = Date().timeIntervalSince1970
+        updateStatus()
+        scheduleNotifications()
+        WatchBridge.shared.sendState()
+        return (json?["allClearSent"] as? Bool == true) ? .allClearSent : .success
+    }
+
+    /// Pushes the expected return time back by `minutes`, keeping the same note.
+    func extendOuting(by minutes: Int) async -> OutingResult {
+        let remainingMinutes = max(0, Int(ceil(outingTimeRemaining / 60)))
+        return await startOuting(minutes: remainingMinutes + minutes, note: outingNote)
+    }
+
+    /// Ends the outing guard ("I'm back safe"). Also counts as a check-in.
+    func endOuting() async -> OutingResult {
+        guard !contactEmail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            // Without a contact the server never knew about this outing
+            clearOuting()
+            return .success
+        }
+
+        let (statusCode, json) = await request(path: "outing/end", payload: configPayload())
+        guard statusCode == 200 else { return .failed }
+
+        clearOuting()
+        lastCheckInTimeTimestamp = Date().timeIntervalSince1970
+        updateStatus()
+        scheduleNotifications()
+        WatchBridge.shared.sendState()
+        return (json?["allClearSent"] as? Bool == true) ? .allClearSent : .success
+    }
+
+    private func clearOuting() {
+        outingDeadlineTimestamp = 0
+        outingNote = ""
+        outingTimeRemaining = 0
+    }
+
+    private func outingEmailBody(note: String, deadline: Date) -> String {
+        let baseBody = emailBody.isEmpty ? NSLocalizedString("Default_Email_Body", comment: "") : emailBody
+        let noteText = note.isEmpty ? NSLocalizedString("Outing_Email_No_Note", comment: "") : note
+        let details = String(
+            format: NSLocalizedString("Outing_Email_Details", comment: ""),
+            noteText,
+            deadline.formatted(date: .abbreviated, time: .shortened),
+            TimeZone.current.identifier
+        )
+        return details + "\n\n" + baseBody
+    }
+
+    /// POSTs JSON to the backend and returns the HTTP status code, or nil on network failure.
+    private func post(path: String, payload: [String: Any]) async -> Int? {
+        await request(path: path, payload: payload).statusCode
+    }
+
+    /// POSTs JSON to the backend and returns the status code and decoded JSON response body.
+    private func request(path: String, payload: [String: Any]) async -> (statusCode: Int?, json: [String: Any]?) {
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: payload)
-            var request = URLRequest(url: backendURL)
+            var request = URLRequest(url: backendBaseURL.appendingPathComponent(path))
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = jsonData
-            
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                print("Server Sync Success")
-                self.syncStatus = .success
-                // Reset to idle after 3 seconds
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
-                if self.syncStatus == .success { self.syncStatus = .idle }
-            } else {
-                print("Server Sync Failed: Status code \((response as? HTTPURLResponse)?.statusCode ?? 0)")
-                self.syncStatus = .failed
-            }
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            return ((response as? HTTPURLResponse)?.statusCode, json)
         } catch {
-            print("Server Sync Error: \(error.localizedDescription)")
-            self.syncStatus = .failed
+            print("Server Request Error (\(path)): \(error.localizedDescription)")
+            return (nil, nil)
         }
     }
     
@@ -162,7 +305,8 @@ class AliveManager: ObservableObject {
         let now = Date()
         let diff = dueDate.timeIntervalSince(now)
         timeRemaining = diff
-        
+        outingTimeRemaining = outingDeadline.map { $0.timeIntervalSince(now) } ?? 0
+
         if diff > 3600 {
             status = .safe
         } else if diff > 600 {
@@ -197,32 +341,24 @@ class AliveManager: ObservableObject {
         
         let normalizedEmail = contactEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 
-        let payload: [String: Any] = [
+        let payload = credentials().merging([
             "email": normalizedEmail,
-            "intervalHours": 0, // 0 can signify an immediate test on backend
             "subject": finalSubject,
-            "body": finalBody,
-            "isTest": true
-        ]
-        
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: payload)
-            var request = URLRequest(url: backendURL)
-            request.httpMethod = .init("POST")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = jsonData
-            
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+            "body": finalBody
+        ]) { _, new in new }
+
+        let statusCode = await post(path: "test", payload: payload)
+
+        if statusCode == 200 {
+            lastTestEmailSentTimeInterval = now
+            self.syncStatus = .success
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            if self.syncStatus == .success { self.syncStatus = .idle }
+        } else {
+            if statusCode == 429 {
+                // Server-side daily limit hit; keep the local limit in step
                 lastTestEmailSentTimeInterval = now
-                self.syncStatus = .success
-                try? await Task.sleep(nanoseconds: 3_000_000_000)
-                if self.syncStatus == .success { self.syncStatus = .idle }
-            } else {
-                self.syncStatus = .failed
             }
-        } catch {
             self.syncStatus = .failed
         }
     }
@@ -286,7 +422,33 @@ class AliveManager: ObservableObject {
             center.add(request)
         }
         
-        // 3. Daily Reminder Notification
+        // 3. Outing Guard Notifications (15 minutes before and at the expected return time)
+        if let outingDeadline {
+            let outingWarningDate = outingDeadline.addingTimeInterval(-15 * 60)
+            if outingWarningDate > Date() {
+                let content = UNMutableNotificationContent()
+                content.title = NSLocalizedString("Notification_Title_Outing_Warning", comment: "Outing Warning Title")
+                content.body = NSLocalizedString("Notification_Body_Outing_Warning", comment: "Outing Warning Body")
+                content.sound = .default
+
+                let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: outingWarningDate)
+                let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+                center.add(UNNotificationRequest(identifier: "outing-warning-notification", content: content, trigger: trigger))
+            }
+
+            if outingDeadline > Date() {
+                let content = UNMutableNotificationContent()
+                content.title = NSLocalizedString("Notification_Title_Outing_Expired", comment: "Outing Expired Title")
+                content.body = NSLocalizedString("Notification_Body_Outing_Expired", comment: "Outing Expired Body")
+                content.sound = .defaultCritical
+
+                let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: outingDeadline)
+                let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
+                center.add(UNNotificationRequest(identifier: "outing-expired-notification", content: content, trigger: trigger))
+            }
+        }
+
+        // 4. Daily Reminder Notification
         if dailyReminderEnabled {
             let content = UNMutableNotificationContent()
             content.title = NSLocalizedString("Notification_Title_Reminder", comment: "Daily Reminder Title")

@@ -1,0 +1,8 @@
+/* Apple Watch */
+"Watch_CheckIn_Button" = "我很好";
+"Watch_Time_Left" = "距离下次打卡";
+"Watch_Overdue" = "已超时\n请尽快打卡";
+"Watch_Checked_In" = "打卡成功 ✓";
+"Watch_Phone_Unreachable" = "连不上 iPhone，请把手机放在身边再试";
+"Watch_No_Contact" = "请先在 iPhone 上设置紧急联系人";
+"Watch_Open_Phone" = "请先在 iPhone 上打开一次 Are You OK";

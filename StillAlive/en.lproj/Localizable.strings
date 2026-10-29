@@ -45,17 +45,36 @@
 "Reminder Time" = "Reminder Time";
 
 "Language" = "Language";
-"System Default" = "System Default";
 "Appearance" = "Appearance";
 "Light" = "Light";
 "Dark" = "Dark";
 "System" = "System Default";
 
-"About Us" = "About Us";
+"Display" = "Display";
+"General" = "General";
+"Haptic Feedback" = "Haptic Feedback";
+"Share with Friends" = "Share with Friends";
+"Rate Us" = "Rate Us";
+"About_Title" = "About Are You OK";
+"About_Description" = "Check in once a day. If you miss it, your emergency contact gets notified.";
+"Contact the Developer" = "Contact the Developer";
+"Feedback" = "Feedback";
+"Xiaohongshu" = "Xiaohongshu";
+"Terms and Privacy" = "Terms and Privacy";
 "Privacy Policy" = "Privacy Policy";
 "Terms of Use" = "Terms of Use";
+"Version" = "Version";
+
+"More Apps" = "More Apps";
+"OTHERAPPINFO_NexPaste" = "Save, sync, and reuse your clipboard";
+"OTHERAPP_Pixie" = "Pixie Wallpaper";
+"OTHERAPPINFO_Pixie" = "High Quality Wallpaper Collection";
+"OTHERAPP_Kiddo" = "Kiddo";
+"OTHERAPPINFO_Kiddo" = "Fun English learning";
+"OTHERAPPINFO_Invsi" = "Private photo vault";
 
 "Emergency Contact" = "Emergency Contact";
+"Tab_Contact" = "Contact";
 "Message Content" = "Message Content";
 "This email will be used when the timer expires." = "This email will be used when the timer expires.";
 "Recipient Email" = "Recipient Email";
@@ -83,3 +102,64 @@
 "Default_Email_Subject" = "Emergency Alert: I haven't checked in / 紧急警报：我还没报平安";
 "Default_Email_Body" = "I have failed to check in on my 'Are You OK' app on time. Please contact me immediately to ensure I am safe.\n---\n我没能在 Are You OK App 上按时打卡。这代表我可能遇到了突发状况，请立即联系我确认我的安全。";
 "Email_Body_Hint" = "Please include your name, phone, address, and door lock codes to help your friends find you quickly.";
+
+/* Tabs */
+"Tab_Home" = "Check In";
+"Tab_Outing" = "Outing";
+
+/* All Clear */
+"All_Clear_Sent" = "Your contact was told you're safe";
+"All_Clear_Email_Subject" = "All clear: I'm OK now / 警报解除：我已经报平安了";
+"All_Clear_Email_Body" = "I have just checked in on my 'Are You OK' app. Sorry for the earlier alert, I'm safe.\n---\n我刚刚在 Are You OK App 上报了平安。之前的警报可以解除了，我很安全。";
+
+/* Outing Guard */
+"Outing_Title" = "Outing Guard";
+"Outing_Description" = "Going for a run, a hike, a date or a late trip home? Set when you'll be back. If you don't mark yourself safe by then, your emergency contact gets an email.";
+"Outing_Duration" = "Back In";
+"Outing_Expected_Return" = "Expected Return";
+"Outing_Note" = "Note";
+"Outing_Note_Placeholder" = "Where you're going, who with, how to reach you…";
+"Outing_Note_Footer" = "If you're not back in time, this note is sent to your contact along with your emergency message.";
+"Outing_Start" = "Start Outing Guard";
+"Outing_Active" = "OUTING GUARD ACTIVE";
+"Outing_Overdue" = "PAST EXPECTED RETURN";
+"Outing_Return_By" = "Back by %@";
+"Outing_End" = "I'm Back Safe";
+"Outing_Extend" = "Need More Time";
+"Outing_Active_Footer" = "Starting, extending or ending the outing guard also counts as today's check-in.";
+"Outing_Ended" = "Welcome back! Outing guard ended.";
+"Outing_Request_Failed" = "Couldn't reach the server. Please check your connection and try again.";
+"Outing_Banner" = "Outing";
+"Outing_Tomorrow" = "Tomorrow";
+"Outing_Notify_Contact" = "%@ will be alerted if you're late";
+"Outing_Remaining" = "REMAINING";
+"Outing_Overdue_By" = "OVERDUE BY";
+"Outing_Overdue_Hint" = "Your emergency contact may already have been alerted. If you're safe, press and hold below now.";
+"Outing_Hold_Hint" = "Hold";
+"Outing_Activity_night" = "Late Home";
+"Outing_Activity_run" = "Run";
+"Outing_Activity_ride" = "Ride";
+"Outing_Activity_date" = "Date";
+"Outing_Activity_hike" = "Hike";
+"Outing_Activity_trip" = "Road Trip";
+
+"Outing_Email_Subject" = "Outing alert: I'm not back yet / 出门守护警报：我还没回来";
+"Outing_Email_Details" = "I started an Outing Guard in the 'Are You OK' app and haven't marked myself safe by my expected return time.\n\nNote: %@\nExpected back by: %@ (%@)";
+"Outing_Email_No_Note" = "(none)";
+
+"Notification_Title_Outing_Warning" = "Almost time to be back";
+"Notification_Body_Outing_Warning" = "15 minutes left on your outing guard. Mark yourself safe or add more time.";
+"Notification_Title_Outing_Expired" = "Outing Guard Expired";
+"Notification_Body_Outing_Expired" = "You're past your expected return time. Mark yourself safe now.";
+
+/* Contact Page */
+"Contact_Ready" = "Will be emailed if you miss a check-in";
+"Contact_Change_Photo" = "Change Photo";
+"Contact_Remove_Photo" = "Remove Photo";
+"Contact_Not_Set" = "No contact yet";
+"Contact_Email_Placeholder" = "friend@example.com";
+"Contact_Use_Default" = "Reset";
+"Contact_Test_Title" = "Test Delivery";
+"Contact_Test_Server" = "Send a Test Email";
+"Contact_Test_Mail_App" = "Send via Mail App";
+"Contact_Test_Next" = "Next test available in %@";

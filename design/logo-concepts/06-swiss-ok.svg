@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><rect width="1024" height="1024" rx="228" fill="#F2F0EA"/>
+<circle cx="332" cy="480" r="150" fill="none" stroke="#FF4B2B" stroke-width="84"/>
+<rect x="582" y="288" width="84" height="384" fill="#111"/>
+<path d="M666 480 L860 288 M666 480 L860 672" stroke="#111" stroke-width="84"/>
+<rect x="140" y="760" width="744" height="10" fill="#111"/>
+<text x="140" y="838" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="700" font-size="46" fill="#111">Are You OK</text>
+<text x="884" y="838" text-anchor="end" font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="46" fill="#111">24h</text>
+</svg>
